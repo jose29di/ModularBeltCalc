@@ -1,0 +1,14 @@
+# Excluir caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Excluir archivos de compilación de PyInstaller
+build/
+dist/
+*.spec
+
+# Excluir archivos temporales y de configuración de VSCode
+.vscode/
+*.log
