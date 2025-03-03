@@ -1,0 +1,18 @@
+pyinstaller --noconsole --onefile \
+--add-data "Module30px.ico;." \
+--add-data "icon_generar.png;." \
+--add-data "icon_guardar.png;." \
+--add-data "loading.gif;." \
+--add-data "icon_reset.png;." \
+--hidden-import=matplotlib \
+--hidden-import=PIL \
+bandas.py
+
+
+pyinstaller --onefile --windowed --icon=assets/Module30px.ico \
+--add-data "assets/icon_generar.png;." \
+--add-data "assets/icon_guardar.png;." \
+--add-data "assets/icon_reset.png;." \
+--hidden-import=matplotlib \
+--hidden-import=PIL \
+bandas.py
