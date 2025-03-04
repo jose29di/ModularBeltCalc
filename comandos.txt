@@ -15,4 +15,11 @@ pyinstaller --onefile --windowed --icon=assets/Module30px.ico \
 --add-data "assets/icon_reset.png;." \
 --hidden-import=matplotlib \
 --hidden-import=PIL \
-bandas.py
+main.py
+
+
+actualizar git
+git status
+git add .
+git commit -m "Descripción breve de los cambios realizados"
+git push origin master

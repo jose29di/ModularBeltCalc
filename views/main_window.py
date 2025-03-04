@@ -16,9 +16,17 @@ from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk
 )
 
+# Configuración de estilo
+BG_COLOR = "#F0F0F0"
+PRIMARY_COLOR = "#2C3E50"
+SECONDARY_COLOR = "#3498DB"
+FONT_NAME = "Segoe UI"
+
+# Variables globales
 canvas = None
 label_modulos = None
 img_memoria = None
+status_bar = None
 
 
 def run_app() -> None:
@@ -27,6 +35,7 @@ def run_app() -> None:
     root = tk.Tk()
     root.title("Generador de Esquema & Calculo de Banda Modular")
     root.geometry("960x700")
+    root.configure(bg=BG_COLOR)
 
     # Icono si existe
     root.iconbitmap(resource_path("assets/Module30px.ico"))
@@ -34,41 +43,15 @@ def run_app() -> None:
     # Estilo de botones
     style = ttk.Style()
     style.theme_use("clam")
-    style.layout(
-        "Modern.TButton",
-        [
-            (
-                "Button.border",
-                {
-                    "children": [
-                        (
-                            "Button.padding",
-                            {
-                                "children": [
-                                    ("Button.label", {"sticky": "nswe"})
-                                ]
-                            },
-                        )
-                    ],
-                    "sticky": "nswe",
-                },
-            )
-        ],
-    )
-    style.configure(
-        "Modern.TButton",
-        font=("Arial", 10, "bold"),
-        background="#5DADE2",
-        foreground="black",
-        padding=10,
-        borderwidth=2,
-        relief="raised",
-    )
-    style.map(
-        "Modern.TButton",
-        background=[("active", "#3498DB")],
-        relief=[("pressed", "ridge")],
-    )
+    style.configure("TFrame")
+    style.configure("TLabel", background=BG_COLOR, font=(FONT_NAME, 10))
+    style.configure("TButton", background=SECONDARY_COLOR, foreground="white")
+
+    style.map("Accent.TButton",
+              # Fondo negro al pasar el mouse
+              background=[("active", "black")],
+              # Texto blanco al pasar el mouse
+              foreground=[("active", "white")])
 
     def cargar_imagen(ruta: str):
         try:
@@ -81,75 +64,93 @@ def run_app() -> None:
     icon_reset = cargar_imagen("assets/icon_reset.png")
 
     frame_main = ttk.Frame(root, padding=10)
-    frame_main.pack(fill=tk.BOTH, expand=True)
+    frame_main.pack(fill=tk.BOTH, expand=True, padx=7, pady=7)
 
     # Sección izquierda
     frame_inputs = ttk.LabelFrame(
-        frame_main, text="Parámetros de Entrada", padding=10
+        frame_main, text="Parámetros de Entrada", padding=15
     )
-    frame_inputs.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+    frame_inputs.pack(side=tk.LEFT, fill=tk.Y, padx=10)
+
+    # Primera fila de cajas
+    frame_fil1 = ttk.Frame(frame_inputs)
+    frame_fil1.pack(fill=tk.X, pady=2)
 
     lbl_serie = ttk.Label(
-        frame_inputs,
-        text="Serie del módulo:",
+        frame_fil1,
+        text="Serie:",
         font=("Arial", 10, "bold")
     )
-    lbl_serie.pack(anchor="w")
+    lbl_serie.pack(side=tk.LEFT, padx=5)
 
     combo_series = ttk.Combobox(
-        frame_inputs,
+        frame_fil1,
         values=list(series_modulos.keys()),
         state="readonly"
     )
-    combo_series.pack()
+    combo_series.pack(side=tk.LEFT, padx=5)
     combo_series.set("E30")
 
-    lbl_altura = ttk.Label(frame_inputs, text="Altura del módulo (mm):")
-    lbl_altura.pack(anchor="w")
-    entry_altura_modulo = ttk.Entry(frame_inputs, width=10)
-    entry_altura_modulo.pack()
-    entry_altura_modulo.insert(0, "30")
+    # Primera fila de cajas
+    frame_fil2 = ttk.Frame(frame_inputs)
+    frame_fil2.pack(fill=tk.X, pady=2)
 
-    lbl_largo = ttk.Label(frame_inputs, text="Largo de banda (cm):")
-    lbl_largo.pack(anchor="w")
-    entry_largo_banda = ttk.Entry(frame_inputs, width=10)
-    entry_largo_banda.pack()
+    lbl_altura = ttk.Label(frame_fil2, text="Altura del módulo (mm):")
+    lbl_altura.pack(side=tk.LEFT, padx=5)
+    entry_altura_modulo = ttk.Entry(frame_fil2, width=10)
+    entry_altura_modulo.pack(side=tk.LEFT, padx=5)
+    entry_altura_modulo.insert(0, "30")
+    entry_altura_modulo.config(state="readonly")
+
+    # Primera fila de cajas
+    frame_fil3 = ttk.Frame(frame_inputs)
+    frame_fil3.pack(fill=tk.X, pady=2)
+
+    lbl_pasador = ttk.Label(frame_fil3, text="Pasador (mm):")
+    lbl_pasador.pack(side=tk.LEFT, padx=5)
+    entry_grosor_pasador = ttk.Entry(frame_fil3, width=10)
+    entry_grosor_pasador.pack(side=tk.LEFT, padx=5)
+    entry_grosor_pasador.insert(0, "0")
+    entry_grosor_pasador.config(state="readonly")
+
+    frame_fil4 = ttk.Frame(frame_inputs)
+    frame_fil4.pack(fill=tk.X, pady=2)
+
+    lbl_largo = ttk.Label(frame_fil4, text="Largo de banda (cm):")
+    lbl_largo.pack(side=tk.LEFT, padx=5)
+    entry_largo_banda = ttk.Entry(frame_fil4, width=10)
+    entry_largo_banda.pack(side=tk.LEFT, padx=5)
     entry_largo_banda.insert(0, "27.00")
 
-    # Check unificado: Con empujadores
-    check_empujadores = tk.BooleanVar(value=False)
-    chk_empujadores = ttk.Checkbutton(
-        frame_inputs,
-        text="Con empujadores",
-        variable=check_empujadores
-    )
-    chk_empujadores.pack(anchor="w", pady=5)
+    # Checkbuttons
+    check_vars = {
+        "check_empujadores": tk.BooleanVar(value=False),
+        "check_indentacion": tk.BooleanVar(value=False),
+        "check_desglose": tk.BooleanVar(value=False)
+    }
 
-    # Check: Con indentación
-    check_indentacion = tk.BooleanVar(value=False)
-    chk_indentacion = ttk.Checkbutton(
-        frame_inputs,
-        text="Con indentación",
-        variable=check_indentacion
-    )
-    chk_indentacion.pack(anchor="w", pady=5)
-
-    # Check: Desglosar módulos laterales
-    check_desglose = tk.BooleanVar(value=False)
-    chk_desglose = ttk.Checkbutton(
-        frame_inputs,
-        text="Desglosar módulos laterales",
-        variable=check_desglose
-    )
-    chk_desglose.pack(anchor="w", pady=5)
+    for text, var_name in [
+        ("Con empujadores", "check_empujadores"),
+        ("Con indentación", "check_indentacion"),
+        ("Desglosar módulos laterales", "check_desglose")
+    ]:
+        frame = ttk.Frame(frame_inputs)
+        frame.pack(fill=tk.X, pady=5)
+        chk = ttk.Checkbutton(frame, text=text, variable=check_vars[var_name])
+        chk.pack(anchor="w")
 
     # Text area con suma en tiempo real
+    lbl_textarea = ttk.Label(frame_inputs, text="Esquema de Banda:")
+    lbl_textarea.pack(anchor="w")
+
     text_area = tk.Text(frame_inputs, height=12, width=30)
     text_area.pack(pady=5)
     text_area.insert(
         tk.END,
-        "50,200,200,200,50\n200,200,200,100\n"
-        "100,200,200,200\n200,200,200,100"
+        "50,200,200,200,50\n"
+        "200,200,200,100\n"
+        "100,200,200,200\n"
+        "200,200,200,100"
     )
 
     def recalcular_sumas_filas(event=None):
@@ -178,19 +179,24 @@ def run_app() -> None:
         entry_altura_modulo.delete(0, tk.END)
         entry_altura_modulo.insert(0, "30")
         entry_altura_modulo.config(state="readonly")
+        entry_grosor_pasador.config(state="normal")
+        entry_grosor_pasador.delete(0, tk.END)
+        entry_grosor_pasador.insert(0, "0")
+        entry_grosor_pasador.config(state="readonly")
+        check_vars["check_empujadores"].set(False)
+        check_vars["check_indentacion"].set(False)
+        check_vars["check_desglose"].set(False)
 
         entry_largo_banda.delete(0, tk.END)
         entry_largo_banda.insert(0, "27.000")
 
-        check_empujadores.set(False)
-        check_indentacion.set(False)
-        check_desglose.set(False)
-
         text_area.delete("1.0", tk.END)
         text_area.insert(
             tk.END,
-            "50,200,200,200,50\n200,200,200,100\n"
-            "100,200,200,200\n200,200,200,100"
+            "50,200,200,200,50\n"
+            "200,200,200,100\n"
+            "100,200,200,200\n"
+            "200,200,200,100"
         )
         label_sumas.config(text="")
         label_modulos.config(text="")
@@ -203,17 +209,24 @@ def run_app() -> None:
             if serie == "Otras":
                 entry_altura_modulo.config(state="normal")
                 entry_altura_modulo.delete(0, tk.END)
+                entry_grosor_pasador.config(state="normal")
+                entry_grosor_pasador.delete(0, tk.END)
             else:
                 entry_altura_modulo.config(state="normal")
                 entry_altura_modulo.delete(0, tk.END)
+                entry_grosor_pasador.config(state="normal")
+                entry_grosor_pasador.delete(0, tk.END)
                 alt = series_modulos[serie]["altura"]
+                passd = series_modulos[serie]["pasador"]
                 entry_altura_modulo.insert(0, str(alt))
                 entry_altura_modulo.config(state="readonly")
+                entry_grosor_pasador.insert(0, str(passd))
+                entry_grosor_pasador.config(state="readonly")
 
             if series_modulos[serie]["Lateral"] == "S":
-                check_desglose.set(True)
+                check_vars["check_desglose"].set(True)
             else:
-                check_desglose.set(False)
+                check_vars["check_desglose"].set(False)
 
     combo_series.bind("<<ComboboxSelected>>", on_combo_change)
 
@@ -226,6 +239,16 @@ def run_app() -> None:
     def ejecutar_script():
         global img_memoria, canvas
         try:
+            # Validar si entry_grosor_pasador está habilitado antes de
+            # intentar convertirlo
+            if entry_grosor_pasador["state"] == "normal":
+                valor_pasador = entry_grosor_pasador.get().strip()
+                # Si está vacío, usa 0
+                mm_pasador = int(valor_pasador) if valor_pasador else 0
+            else:
+                # Si está deshabilitado (readonly), usa 0 por defecto
+                mm_pasador = 0
+
             alt_mod = int(entry_altura_modulo.get())
             largo_mm = round(float(entry_largo_banda.get()) * 10)
             txt = text_area.get("1.0", tk.END)
@@ -241,9 +264,9 @@ def run_app() -> None:
                 esquema,
                 alt_mod,
                 largo_mm,
-                check_empujadores.get(),
-                check_desglose.get(),
-                check_indentacion.get()
+                check_vars["check_empujadores"].get(),
+                check_vars["check_desglose"].get(),
+                check_vars["check_indentacion"].get()
             )
             label_generando.config(text="")
 
@@ -322,9 +345,11 @@ def run_app() -> None:
             # Empujador sin indent => base = total_filas * 2
             # Empujador con indent => base = 2
             # Se suman 10 obsequio
-            if not check_empujadores.get():
+            if not check_vars["check_empujadores"].get():
                 base_tapas = total_filas * 2
-            elif check_empujadores.get() and not check_indentacion.get():
+            elif check_vars[
+                "check_empujadores"].get() and not check_vars[
+                    "check_indentacion"].get():
                 base_tapas = total_filas * 2
             else:
                 # Empujador + indentación
@@ -333,12 +358,12 @@ def run_app() -> None:
             tapas_totales = base_tapas + 10
 
             # Empujadores en Resumen
-            if check_empujadores.get():
+            if check_vars["check_empujadores"].get():
                 txt_mod += "Empujadores:\n"
                 all_m = sorted(
                     set(m_ei.keys()).union(m_ed.keys()).union(m_ec.keys())
                 )
-                if check_desglose.get():
+                if check_vars["check_desglose"].get():
                     txt_mod += "(Izquierdo / Central / Derecho):\n"
                     for med in all_m:
                         iz = m_ei.get(med, 0)
@@ -352,7 +377,7 @@ def run_app() -> None:
                 txt_mod += "-----------------\n"
 
             # Módulos laterales
-            if check_desglose.get():
+            if check_vars["check_desglose"].get():
                 txt_mod += "Módulos Laterales (Izq / Der):\n"
                 all_l = sorted(
                     set(m_izq.keys()).union(m_der.keys())
@@ -374,9 +399,11 @@ def run_app() -> None:
 
             # (NUEVO) Pasadores y Tapas en Resumen
             txt_mod += (
-                f"Pasadores Necesarios: {pasadores_req}  de {ancho_m} cm"
+                f"Pasadores Necesarios: {pasadores_req} de"
+                f" {mm_pasador}mm por {ancho_m} cm"
                 " (incluyendo 5 de obsequio)\n"
-                f"Se necesitan: {pasadores_totales} varillas (2.5 m c/u)\n"
+                f"Se necesitan: {pasadores_totales} de"
+                f" {mm_pasador}mm en varillas (2.5 m c/u)\n"
                 f"Tapas: {tapas_totales} (incluye 10 obsequio )\n"
                 "-----------------\n"
             )
@@ -404,7 +431,7 @@ def run_app() -> None:
                 tk.END, "----------------------------------"
             )
 
-            if check_empujadores.get():
+            if check_vars["check_empujadores"].get():
                 listbox_detalles.insert(tk.END, "==== EMPUJADORES ====")
                 all_m2 = sorted(
                     set(m_ei.keys()).union(m_ed.keys()).union(m_ec.keys())
@@ -413,7 +440,7 @@ def run_app() -> None:
                     iz = m_ei.get(med, 0)
                     ce = m_ec.get(med, 0)
                     de = m_ed.get(med, 0)
-                    if check_desglose.get():
+                    if check_vars["check_desglose"].get():
                         if iz > 0:
                             listbox_detalles.insert(
                                 tk.END,
@@ -443,7 +470,7 @@ def run_app() -> None:
             listbox_detalles.insert(
                 tk.END, "\n\n==== MÓDULOS LATERALES ===="
             )
-            if check_desglose.get():
+            if check_vars["check_desglose"].get():
                 all_l2 = sorted(
                     set(m_izq.keys()).union(m_der.keys())
                 )
@@ -487,8 +514,9 @@ def run_app() -> None:
             # (NUEVO) Pasadores y Tapas en Detalles
             listbox_detalles.insert(
                 tk.END,
-                f"Pasadores Necesarios: {pasadores_req} de {ancho_m} cm\n"
-                f"Se necesitan: {pasadores_totales} varillas (2.5 m c/u) "
+                f"Pasadores Necesarios: {pasadores_req} de {mm_pasador}mm "
+                f"por {ancho_m} cm \n"
+                f" Se necesitan: {pasadores_totales} varillas (2.5 m c/u) "
                 f"(obsequian 5 de {ancho_m} incluidos)\n"
             )
             listbox_detalles.insert(
@@ -504,54 +532,8 @@ def run_app() -> None:
                 "para el largo en cm."
             )
 
-    btn_calc = ttk.Button(
-        frame_botones,
-        text="Calcular Banda",
-        command=ejecutar_script,
-        style="Modern.TButton",
-        image=icon_generar,
-        compound="left"
-    )
-    btn_calc.pack(fill="x", padx=5, pady=5)
-
-    frame_fila1 = ttk.Frame(frame_botones)
-    frame_fila1.pack(fill="x", pady=2)
-
     def on_copiar_imagen():
         copiar_imagen(img_memoria)
-
-    btn_reset = ttk.Button(
-        frame_fila1,
-        text="Limpiar Datos",
-        command=resetear_formulario,
-        style="Modern.TButton",
-        image=icon_reset,
-        compound="left"
-    )
-    btn_reset.pack(side="left", expand=True, fill="x", padx=5)
-
-    btn_copiar_imagen = ttk.Button(
-        frame_fila1,
-        text="Copiar Imagen",
-        command=on_copiar_imagen,
-        style="Modern.TButton",
-        state=tk.DISABLED
-    )
-    btn_copiar_imagen.pack(side="left", expand=True, fill="x", padx=5)
-
-    frame_fila2 = ttk.Frame(frame_botones)
-    frame_fila2.pack(fill="x", pady=2)
-
-    def on_copiar_datos():
-        copiar_datos(label_modulos.cget("text"))
-
-    btn_copiar_datos = ttk.Button(
-        frame_fila2,
-        text="Copiar Datos",
-        command=on_copiar_datos,
-        style="Modern.TButton"
-    )
-    btn_copiar_datos.pack(side="left", expand=True, fill="x", padx=5)
 
     def guardar_imagen():
         global canvas
@@ -566,16 +548,67 @@ def run_app() -> None:
             canvas.figure.savefig(file_path, dpi=300)
             messagebox.showinfo("Guardado", "Imagen guardada.")
 
-    btn_guardar = ttk.Button(
-        frame_fila2,
-        text="Guardar Imagen",
-        command=guardar_imagen,
-        style="Modern.TButton",
-        image=icon_guardar,
-        compound="left"
-    )
-    btn_guardar.pack(side="left", expand=True, fill="x", padx=5)
+    def on_copiar_datos():
+        copiar_datos(label_modulos.cget("text"))
 
+    # Botones de acción - Manteniendo la estructura de filas
+    button_frame = ttk.Frame(frame_botones)
+    button_frame.pack(fill=tk.X, pady=15)
+
+    # Función para crear botones con estilo
+    def create_button(parent, text, color, command, iconos=None):
+        btn = ttk.Button(
+            parent,
+            text=text,
+            command=command,
+            style="Accent.TButton",
+            width=17  # Añadir ancho consistente
+        )
+        if iconos:  # Solo agregar el icono si se proporciona
+            btn.iconos = iconos
+        return btn
+
+        style.configure("Accent.TButton",
+                        background=color,
+                        foreground="white",
+                        font=(FONT_NAME, 10, "bold"),
+                        padding=6)
+        return btn
+
+    # Primera fila de botones
+    frame_fila1 = ttk.Frame(button_frame)
+    frame_fila1.pack(fill=tk.X, pady=2)
+
+    # calcular banda y generar graficos
+    btn_calcular = create_button(
+        frame_fila1, "Calcular", "#27AE60", ejecutar_script, icon_generar)
+
+    # Segunda fila de botones
+    frame_fila2 = ttk.Frame(button_frame)
+    frame_fila2.pack(fill=tk.X, pady=2)
+
+    btn_limpiar = create_button(
+        frame_fila2, "Limpiar", "#E74C3C", resetear_formulario, icon_reset)
+    btn_copiar_imagen = create_button(
+        frame_fila2, "Copiar Img", "#E74C3C", on_copiar_imagen)
+
+    # Tercera fila de botones
+    frame_fila3 = ttk.Frame(button_frame)
+    frame_fila3.pack(fill=tk.X, pady=2)
+
+    btn_copiar_datos = create_button(
+        frame_fila3, "Copiar dts", "#2980B9", on_copiar_datos)
+    btn_guardar = create_button(
+        frame_fila3, "Guardar", "#8E44AD", guardar_imagen, icon_guardar)
+
+    # Distribución en cada fila
+    btn_calcular.pack(side=tk.LEFT, expand=True, padx=3)
+    btn_limpiar.pack(side=tk.LEFT, expand=True, padx=3)
+    btn_copiar_imagen.pack(side=tk.LEFT, expand=True, padx=3)
+    btn_copiar_datos.pack(side=tk.LEFT, expand=True, padx=3)
+    btn_guardar.pack(side=tk.LEFT, expand=True, padx=3)
+
+# --------------------------------------------------------
     frame_datos = ttk.LabelFrame(
         frame_main, text="Detalles de los Módulos", padding=10
     )
@@ -633,6 +666,16 @@ def run_app() -> None:
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     menu_copiar = tk.Menu(root, tearoff=0)
+
+    # Barra de estado
+    status_bar = ttk.Label(
+        root,
+        text="Listo",
+        relief=tk.SUNKEN,
+        anchor=tk.W,
+        font=(FONT_NAME, 9)
+    )
+    status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def copiar_seleccion():
         sel = listbox_detalles.curselection()
