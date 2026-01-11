@@ -1,0 +1,25 @@
+pyinstaller --noconsole --onefile \
+--add-data "Module30px.ico;." \
+--add-data "icon_generar.png;." \
+--add-data "icon_guardar.png;." \
+--add-data "loading.gif;." \
+--add-data "icon_reset.png;." \
+--hidden-import=matplotlib \
+--hidden-import=PIL \
+bandas.py
+
+
+pyinstaller --onefile --windowed --icon=assets/Module30px.ico \
+--add-data "assets;assets/" \
+--hidden-import=matplotlib \
+--hidden-import=PIL \
+main.py
+
+
+
+
+actualizar git
+git status
+git add .
+git commit -m "Descripción breve de los cambios realizados"
+git push origin master

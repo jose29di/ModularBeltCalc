@@ -1,0 +1,23 @@
+# Calculadora de Banda Modular - Dependencias
+# Instalar con: pip install -r requirements.txt
+
+# GUI
+tkinter-tools==0.1.0; sys_platform == 'win32'
+
+# Gráficos y visualización
+matplotlib>=3.5.0
+Pillow>=9.0.0
+
+# Procesamiento de datos
+pandas>=1.4.0
+numpy>=1.21.0
+openpyxl>=3.0.0
+
+# Base de datos (incluido en Python estándar, pero se lista para referencia)
+# sqlite3 - Viene con Python
+
+# Construcción de ejecutable
+pyinstaller>=5.0.0
+
+# Utilidades
+python-dateutil>=2.8.0
