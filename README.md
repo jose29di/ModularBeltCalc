@@ -212,4 +212,15 @@ Para preguntas o soporte:
 
 ---
 
+## 📸 Capturas de Pantalla
+
+### Interfaz Principal
+![Interfaz Principal](images/main-interface.png)
+
+### Diagrama de Banda
+![Diagrama de Banda](images/belt-diagram.png)
+
+### Gestor de Esquemas
+<img src="images/schema-manager.png" alt="Gestor de Esquemas" width="600">
+
 ⭐ **¡Si te resulta útil este proyecto, no olvides darle una estrella!** ⭐
